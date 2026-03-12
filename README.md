@@ -4,6 +4,15 @@ GreenLens is a smart platform that helps detect, report, and manage waste using 
 
 GreenLens is an AI-powered smart waste management platform that helps detect, report, and manage garbage in cities. The system connects citizens, drivers, and municipalities to ensure faster waste collection and cleaner environments.
 
+## 🌐 Live Demo
+
+Experience the GreenLens AI-powered garbage detection and waste management platform through the live demo below:
+
+🔗 **Launch Demo:**  
+https://ai.studio/apps/f6444aab-8f1b-4204-8370-e008587f219d?fullscreenApplet=true
+
+> Note: This is a prototype developed for hackathon demonstration purposes.
+
 ## 🚀 Features
 
 - AI-based waste detection
