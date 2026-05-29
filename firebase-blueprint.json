@@ -1,0 +1,332 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the application, including regular users, drivers, and municipality admins.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Full name of the user"
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user", "driver", "municipality_admin"],
+          "description": "Role of the user"
+        },
+        "points": {
+          "type": "number",
+          "description": "Eco points earned by the user"
+        },
+        "streak": {
+          "type": "number",
+          "description": "Current recycling streak"
+        },
+        "co2Saved": {
+          "type": "number",
+          "description": "Total CO2 saved in kg"
+        },
+        "itemsRecycled": {
+          "type": "number",
+          "description": "Total items recycled"
+        },
+        "dailyScansCount": {
+          "type": "number",
+          "description": "Number of scans rewarded today"
+        },
+        "lastScanDate": {
+          "type": "string",
+          "description": "ISO date of the last rewarded scan"
+        },
+        "scannedImageHashes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Hashes of images already scanned to prevent duplicates"
+        },
+        "driverStatus": {
+          "type": "string",
+          "enum": ["Active", "Offline", "On Pickup", "online", "offline"],
+          "description": "Current status of the driver (only applicable if role is driver)"
+        },
+        "totalPickups": {
+          "type": "number",
+          "description": "Total pickups completed by the driver"
+        },
+        "rating": {
+          "type": "number",
+          "description": "Average rating of the driver"
+        },
+        "walletBalance": {
+          "type": "number",
+          "description": "Wallet balance for the driver"
+        },
+        "earningsToday": {
+          "type": "number",
+          "description": "Earnings earned by the driver today"
+        },
+        "earningsWeekly": {
+          "type": "number",
+          "description": "Earnings earned by the driver this week"
+        },
+        "todayPickups": {
+          "type": "number",
+          "description": "Number of pickups completed by the driver today"
+        },
+        "onTimeRate": {
+          "type": "number",
+          "description": "Percentage of pickups completed on time"
+        },
+        "wasteCollected": {
+          "type": "number",
+          "description": "Total waste collected by the driver in kg"
+        },
+        "plasticRecycled": {
+          "type": "number",
+          "description": "Total plastic recycled by the driver in kg"
+        },
+        "co2Reduction": {
+          "type": "number",
+          "description": "Total CO2 reduction achieved by the driver in kg"
+        },
+        "totalCleanups": {
+          "type": "number",
+          "description": "Total number of cleanups completed by the driver"
+        },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          },
+          "description": "Current location of the user/driver"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of when the user was created"
+        }
+      },
+      "required": ["name", "email", "role"]
+    },
+    "PickupRequest": {
+      "title": "Pickup Request",
+      "description": "A request to pick up garbage.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "ID of the user who created the request"
+        },
+        "userName": {
+          "type": "string",
+          "description": "Name of the user who created the request"
+        },
+        "address": {
+          "type": "string",
+          "description": "Address of the pickup location"
+        },
+        "wasteType": {
+          "type": "string",
+          "description": "Type of waste to be collected"
+        },
+        "latitude": {
+          "type": "number",
+          "description": "Latitude of the pickup location"
+        },
+        "longitude": {
+          "type": "number",
+          "description": "Longitude of the pickup location"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "assigned", "accepted", "on_route", "on_the_way", "arrived", "completed"],
+          "description": "Current status of the pickup request"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of when the request was created"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "ISO timestamp of the request"
+        },
+        "coordinates": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          },
+          "description": "Coordinates of the pickup location"
+        },
+        "weight": {
+          "type": "number",
+          "description": "Weight of the garbage collected in kg"
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL or base64 data of the uploaded image"
+        },
+        "assignedDriverId": {
+          "type": "string",
+          "description": "ID of the driver assigned to this request"
+        },
+        "assignedDriverName": {
+          "type": "string",
+          "description": "Name of the driver assigned to this request"
+        },
+        "driverLocation": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          },
+          "description": "Current location of the assigned driver"
+        },
+        "completionTime": {
+          "type": "string",
+          "description": "ISO timestamp of when the request was completed"
+        }
+      },
+      "required": ["userId", "userName", "address", "wasteType", "latitude", "longitude", "status", "createdAt", "timestamp", "coordinates"]
+    },
+    "RewardHistory": {
+      "title": "Reward History",
+      "description": "Record of points earned or spent by a user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "ID of the user"
+        },
+        "points": {
+          "type": "number",
+          "description": "Number of points (positive for earned, negative for spent)"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Reason for the points change"
+        },
+        "timestamp": {
+          "type": "timestamp",
+          "description": "Time of the transaction"
+        }
+      },
+      "required": ["userId", "points", "reason", "timestamp"]
+    },
+    "AdminSettings": {
+      "title": "Admin Settings",
+      "description": "System-wide settings for the admin dashboard.",
+      "type": "object",
+      "properties": {
+        "defaultMapView": {
+          "type": "string",
+          "enum": ["city", "hotspots", "pickups"],
+          "description": "Default map view for the admin dashboard"
+        },
+        "notifications": {
+          "type": "object",
+          "properties": {
+            "reports": { "type": "boolean" },
+            "delays": { "type": "boolean" },
+            "warnings": { "type": "boolean" }
+          }
+        },
+        "management": {
+          "type": "object",
+          "properties": {
+            "allowRegistration": { "type": "boolean" },
+            "autoApprove": { "type": "boolean" },
+            "maxDistance": { "type": "number" }
+          }
+        },
+        "serviceZones": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["defaultMapView"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "System notification for the admin.",
+      "type": "object",
+      "properties": {
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["request", "completion", "driver"] },
+        "timestamp": { "type": "timestamp" },
+        "read": { "type": "boolean" }
+      },
+      "required": ["message", "type", "timestamp", "read"]
+    },
+    "Dustbin": {
+      "title": "Dustbin",
+      "description": "A smart dustbin with fill level monitoring.",
+      "type": "object",
+      "properties": {
+        "location": { "type": "string" },
+        "coordinates": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        },
+        "fillLevel": { "type": "number" },
+        "status": { "type": "string" },
+        "lastUpdated": { "type": "string" }
+      },
+      "required": ["location", "coordinates", "fillLevel", "status", "lastUpdated"]
+    },
+    "GarbageHotspot": {
+      "title": "Garbage Hotspot",
+      "description": "A location with high garbage reporting.",
+      "type": "object",
+      "properties": {
+        "location": { "type": "string" },
+        "coordinates": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        },
+        "reportCount": { "type": "number" },
+        "severity": { "type": "string", "enum": ["low", "medium", "high"] }
+      },
+      "required": ["location", "coordinates", "reportCount", "severity"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Stores user profiles, including drivers and admins."
+    },
+    "pickupRequests/{requestId}": {
+      "schema": { "$ref": "#/entities/PickupRequest" },
+      "description": "Stores all garbage reports and pickup requests."
+    },
+    "rewardHistory/{historyId}": {
+      "schema": { "$ref": "#/entities/RewardHistory" },
+      "description": "Stores the history of eco points earned and spent."
+    },
+    "admin_settings/config": {
+      "schema": { "$ref": "#/entities/AdminSettings" },
+      "description": "Stores admin dashboard settings."
+    },
+    "notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "Stores admin notifications."
+    },
+    "dustbins/{binId}": {
+      "schema": { "$ref": "#/entities/Dustbin" },
+      "description": "Stores smart dustbin data."
+    },
+    "hotspots/{hotspotId}": {
+      "schema": { "$ref": "#/entities/GarbageHotspot" },
+      "description": "Stores garbage hotspot data."
+    }
+  }
+}

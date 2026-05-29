@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EcoSnap</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #ffffff; /* white */
+      }
+      .dark body {
+        background-color: #030712; /* gray-950 */
+      }
+      /* Hide scrollbar for clean mobile look */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    </style>
+    <link rel="stylesheet" href="/index.css">
+  </head>
+  <body>
+    <script>
+      window.addEventListener('error', (event) => {
+        const errorDiv = document.createElement('div');
+        errorDiv.style.position = 'fixed';
+        errorDiv.style.top = '0';
+        errorDiv.style.left = '0';
+        errorDiv.style.zIndex = '9999';
+        errorDiv.style.background = 'red';
+        errorDiv.style.color = 'white';
+        errorDiv.style.padding = '20px';
+        errorDiv.style.whiteSpace = 'pre-wrap';
+        errorDiv.innerHTML = `<h1>Global Error</h1><p>${event.error?.message}</p><pre>${event.error?.stack}</pre>`;
+        document.body.appendChild(errorDiv);
+      });
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

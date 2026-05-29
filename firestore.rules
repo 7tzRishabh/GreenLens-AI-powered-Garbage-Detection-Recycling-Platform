@@ -1,0 +1,228 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - name: string (required)
+    //   - email: string (required)
+    //   - role: string (required, enum: 'user', 'driver', 'municipality_admin')
+    //   - points: number (optional)
+    //   - streak: number (optional)
+    //   - co2Saved: number (optional)
+    //   - itemsRecycled: number (optional)
+    //   - driverStatus: string (optional, enum: 'Active', 'Offline', 'On Pickup', 'online', 'offline')
+    //   - totalPickups: number (optional)
+    //   - rating: number (optional)
+    //   - walletBalance: number (optional)
+    //
+    // Collection: pickupRequests
+    // Document ID: {requestId}
+    // Fields:
+    //   - userId: string (required)
+    //   - userName: string (required)
+    //   - address: string (required)
+    //   - wasteType: string (required)
+    //   - status: string (required, enum: 'pending', 'assigned', 'accepted', 'on_route', 'completed')
+    //   - timestamp: string (required)
+    //   - coordinates: map (required, lat: number, lng: number)
+    //   - assignedDriverId: string (optional)
+    //   - assignedDriverName: string (optional)
+    //   - imageUrl: string (optional)
+    //   - completionTime: string (optional)
+    //
+    // Collection: rewardHistory
+    // Document ID: {historyId}
+    // Fields:
+    //   - userId: string (required)
+    //   - points: number (required)
+    //   - reason: string (required)
+    //   - timestamp: string (required)
+    //
+    // Collection: dustbins
+    // Document ID: {binId}
+    // Fields:
+    //   - location: string (required)
+    //   - coordinates: map (required, lat: number, lng: number)
+    //   - fillLevel: number (required, 0-100)
+    //   - status: string (required)
+    //   - lastUpdated: string (required)
+    //
+    // Collection: hotspots
+    // Document ID: {hotspotId}
+    // Fields:
+    //   - location: string (required)
+    //   - coordinates: map (required, lat: number, lng: number)
+    //   - reportCount: number (required)
+    //   - severity: string (required, enum: 'low', 'medium', 'high')
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'municipality_admin') ||
+          (request.auth.token.email == "rishabhraj8328@gmail.com" && request.auth.token.email_verified == true) ||
+          (request.auth.token.email == "admin@greenlens.com") ||
+          (request.auth.token.email == "admin@gmail.com"));
+    }
+
+    function isDriver() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'driver';
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidUser(data, isUpdate) {
+      let requiredFields = ['name', 'email', 'role'];
+      let allowedFields = [
+        'id', 'name', 'email', 'role', 'points', 'streak', 'co2Saved', 'itemsRecycled',
+        'dailyScansCount', 'lastScanDate', 'scannedImageHashes', 'driverStatus',
+        'totalPickups', 'rating', 'walletBalance', 'earningsToday', 'earningsWeekly',
+        'todayPickups', 'onTimeRate', 'wasteCollected', 'plasticRecycled',
+        'co2Reduction', 'totalCleanups', 'location', 'createdAt'
+      ];
+      
+      return (isUpdate || data.keys().hasAll(requiredFields)) &&
+             data.keys().hasOnly(allowedFields) &&
+             (!('id' in data) || (data.id is string && data.id.size() > 0 && data.id.size() < 100)) &&
+             (!('name' in data) || (data.name is string && data.name.size() > 0 && data.name.size() < 100)) &&
+             (!('email' in data) || isValidEmail(data.email)) &&
+             (!('role' in data) || data.role in ['user', 'driver', 'municipality_admin']) &&
+             (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() < 100)) &&
+             (!('points' in data) || data.points is number) &&
+             (!('streak' in data) || data.streak is number) &&
+             (!('co2Saved' in data) || data.co2Saved is number) &&
+             (!('itemsRecycled' in data) || data.itemsRecycled is number) &&
+             (!('dailyScansCount' in data) || data.dailyScansCount is number) &&
+             (!('lastScanDate' in data) || (data.lastScanDate is string && data.lastScanDate.size() < 100)) &&
+             (!('scannedImageHashes' in data) || (data.scannedImageHashes is list && data.scannedImageHashes.size() <= 1000)) &&
+             (!('driverStatus' in data) || data.driverStatus in ['Active', 'Offline', 'On Pickup', 'online', 'offline']) &&
+             (!('totalPickups' in data) || data.totalPickups is number) &&
+             (!('rating' in data) || data.rating is number) &&
+             (!('walletBalance' in data) || data.walletBalance is number) &&
+             (!('earningsToday' in data) || data.earningsToday is number) &&
+             (!('earningsWeekly' in data) || data.earningsWeekly is number) &&
+             (!('todayPickups' in data) || data.todayPickups is number) &&
+             (!('onTimeRate' in data) || data.onTimeRate is number) &&
+             (!('wasteCollected' in data) || data.wasteCollected is number) &&
+             (!('plasticRecycled' in data) || data.plasticRecycled is number) &&
+             (!('co2Reduction' in data) || data.co2Reduction is number) &&
+             (!('totalCleanups' in data) || data.totalCleanups is number) &&
+             (!('location' in data) || (data.location is map && data.location.keys().hasAll(['lat', 'lng']) && data.location.lat is number && data.location.lng is number));
+    }
+
+    function isValidPickupRequest(data, isUpdate) {
+      return (isUpdate || data.keys().hasAll(['userId', 'userName', 'address', 'wasteType', 'status', 'timestamp', 'coordinates', 'latitude', 'longitude', 'createdAt'])) &&
+             data.keys().hasOnly(['userId', 'userName', 'address', 'wasteType', 'status', 'timestamp', 'coordinates', 'assignedDriverId', 'assignedDriverName', 'imageUrl', 'weight', 'completionTime', 'latitude', 'longitude', 'createdAt', 'driverLocation']) &&
+             (!('userId' in data) || (data.userId is string && data.userId.size() > 0 && data.userId.size() < 100)) &&
+             (!('userName' in data) || (data.userName is string && data.userName.size() > 0 && data.userName.size() < 100)) &&
+             (!('address' in data) || (data.address is string && data.address.size() > 0 && data.address.size() < 500)) &&
+             (!('wasteType' in data) || (data.wasteType is string && data.wasteType.size() > 0 && data.wasteType.size() < 100)) &&
+             (!('status' in data) || data.status in ['pending', 'assigned', 'accepted', 'on_route', 'on_the_way', 'arrived', 'completed']) &&
+             (!('timestamp' in data) || (data.timestamp is string && data.timestamp.size() < 100)) &&
+             (!('coordinates' in data) || (data.coordinates is map && data.coordinates.keys().hasAll(['lat', 'lng']) && data.coordinates.lat is number && data.coordinates.lng is number)) &&
+             (!('assignedDriverId' in data) || (data.assignedDriverId is string && data.assignedDriverId.size() < 100)) &&
+             (!('assignedDriverName' in data) || (data.assignedDriverName is string && data.assignedDriverName.size() < 100)) &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() < 1048576)) &&
+             (!('weight' in data) || data.weight is number) &&
+             (!('latitude' in data) || data.latitude is number) &&
+             (!('longitude' in data) || data.longitude is number) &&
+             (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() < 100)) &&
+             (!('driverLocation' in data) || (data.driverLocation is map && data.driverLocation.keys().hasAll(['lat', 'lng']) && data.driverLocation.lat is number && data.driverLocation.lng is number)) &&
+             (!('completionTime' in data) || (data.completionTime is string && data.completionTime.size() < 100));
+    }
+
+    function isValidRewardHistory(data) {
+      return data.keys().hasAll(['userId', 'points', 'reason', 'timestamp']) &&
+             data.userId is string && data.userId.size() > 0 && data.userId.size() < 100 &&
+             data.points is number &&
+             data.reason is string && data.reason.size() > 0 && data.reason.size() < 500 &&
+             data.timestamp is string && data.timestamp.size() < 100;
+    }
+
+    function isValidDustbin(data) {
+      return data.keys().hasAll(['location', 'coordinates', 'fillLevel', 'status', 'lastUpdated']) &&
+             data.location is string && data.location.size() > 0 && data.location.size() < 200 &&
+             data.coordinates is map && data.coordinates.keys().hasAll(['lat', 'lng']) &&
+             data.coordinates.lat is number && data.coordinates.lng is number &&
+             data.fillLevel is number && data.fillLevel >= 0 && data.fillLevel <= 100 &&
+             data.status is string && data.status.size() > 0 && data.status.size() < 100 &&
+             data.lastUpdated is string && data.lastUpdated.size() < 100;
+    }
+
+    function isValidHotspot(data) {
+      return data.keys().hasAll(['location', 'coordinates', 'reportCount', 'severity']) &&
+             data.location is string && data.location.size() > 0 && data.location.size() < 200 &&
+             data.coordinates is map && data.coordinates.keys().hasAll(['lat', 'lng']) &&
+             data.coordinates.lat is number && data.coordinates.lng is number &&
+             data.reportCount is number && data.reportCount >= 0 &&
+             data.severity in ['low', 'medium', 'high'];
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated(); // Allow authenticated reads for demo
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data, false);
+      allow update: if isAuthenticated() && isValidUser(request.resource.data, true) && (isOwner(userId) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /pickupRequests/{requestId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidPickupRequest(request.resource.data, false) && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && isValidPickupRequest(request.resource.data, true) && (
+        isOwner(resource.data.userId) || isDriver() || isAdmin()
+      ) && request.resource.data.userId == resource.data.userId; // userId is immutable
+      allow delete: if isAdmin();
+    }
+
+    match /rewardHistory/{historyId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin());
+      allow create: if isAuthenticated() && isValidRewardHistory(request.resource.data) && (isOwner(request.resource.data.userId) || isAdmin());
+      allow update: if isAdmin() && isValidRewardHistory(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /admin_settings/config {
+      allow read: if isAdmin();
+      allow update: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /dustbins/{binId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() && isValidDustbin(request.resource.data);
+      allow update: if isAdmin() && isValidDustbin(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /hotspots/{hotspotId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() && isValidHotspot(request.resource.data);
+      allow update: if isAdmin() && isValidHotspot(request.resource.data);
+      allow delete: if isAdmin();
+    }
+  }
+}

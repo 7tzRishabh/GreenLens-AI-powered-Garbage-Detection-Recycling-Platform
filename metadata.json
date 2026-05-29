@@ -1,0 +1,8 @@
+{
+  "name": "GreenLens",
+  "description": "AI-powered Garbage Detection & Recycling Platform gamifying waste management.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
